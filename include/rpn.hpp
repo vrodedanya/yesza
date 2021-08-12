@@ -12,7 +12,7 @@
 
 namespace yezha
 {
-	class expression
+	class expression // TODO add functions supporting
 	{
 	private:
 		std::stack<std::string> arguments;
@@ -26,7 +26,7 @@ namespace yezha
 			while (!arguments.empty())
 			{
 				std::cout << arguments.top() << std::endl;
-				if (!std::isdigit(arguments.top()[0]) && !std::isdigit(arguments.top()[1]))
+				if (!std::isdigit(arguments.top()[0]) && !std::isdigit(arguments.top()[1])) // TODO change branches to map storage
 				{
 					if (arguments.top() == "+")
 					{
@@ -88,15 +88,16 @@ namespace yezha
 		}
 	};
 
+	// TODO fix issue with negative blocks
 	class state_machine
 	{
 	private:
 		std::vector<std::string> operations; // storage operations
 		std::vector<std::string> outputString;
 		std::string handlingString;
-		const std::vector<char> operators{'+', '-', '*', '/'};
+		const std::vector<char> operators{'+', '-', '*', '/'}; // TODO add ^
 
-		const std::vector<std::string> functions{"sin", "cos", "tan", "cotan"};
+		const std::vector<std::string> functions{"sin", "cos", "tan", "cotan"}; // TODO add more functions
 
 		enum state
 		{
@@ -131,7 +132,8 @@ namespace yezha
 			if (std::isdigit(static_cast<unsigned char>(*it)))
 			{
 				currentState = state::number;
-				std::string string_buffer = getElement(it, handlingString.cend(), [](char ch){return !(std::isdigit(ch) || ch == '.');});
+				auto isNotNumber = [](char ch){return !(std::isdigit(ch) || ch == '.');};
+				std::string string_buffer = getElement(it, handlingString.cend(), isNotNumber);
 				it += string_buffer.size() - 1;
 				outputString.emplace_back(string_buffer);
 			}
@@ -151,7 +153,8 @@ namespace yezha
 			else if (*it != ' ')
 			{
 				currentState = state::function;
-				std::string buff = getElement(it, handlingString.cend(), [](char ch){return !(ch >= 'a' && ch <='z' || ch >= 'A' && ch <= 'Z');});
+				auto isNotString = [](char ch){return !(ch >= 'a' && ch <='z' || ch >= 'A' && ch <= 'Z');};
+				std::string buff = getElement(it, handlingString.cend(), isNotString);
 				it += buff.size() - 1;
 				std::cout << "Got string: " << buff << std::endl;
 				operations.push_back(buff);
@@ -197,7 +200,8 @@ namespace yezha
 			if (std::isdigit(static_cast<unsigned char>(*it)))
 			{
 				currentState = state::number;
-				std::string string_buffer = getElement(it, handlingString.cend(), [](char ch){return !(std::isdigit(ch) || ch == '.');});
+				auto isNotNumber = [](char ch){return !(std::isdigit(ch) || ch == '.');};
+				std::string string_buffer = getElement(it, handlingString.cend(), isNotNumber);
 				it += string_buffer.size() - 1;
 				std::cout << "Got number: " << string_buffer << std::endl;
 				if (currentMod == mod::empty) outputString.push_back(string_buffer);
@@ -216,7 +220,8 @@ namespace yezha
 
 			else if (*it != ' ')
 			{
-				std::string string = getElement(it, handlingString.cend(), [](char ch){return !(ch >= 'a' && ch <='z' || ch >= 'A' && ch <= 'Z');});
+				auto isNotString = [](char ch){return !(ch >= 'a' && ch <='z' || ch >= 'A' && ch <= 'Z');};
+				std::string string = getElement(it, handlingString.cend(), isNotString);
 				it += string.size() - 1;
 				std::cout << "Got string: " << string << std::endl;
 				operations.push_back(string);

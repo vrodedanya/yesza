@@ -2,6 +2,8 @@
 #include <iostream>
 #include <gtest/gtest.h>
 
+// TODO Add more tests
+
 TEST(expression, sum)
 {
 	ASSERT_DOUBLE_EQ(yezha::count("5+10"), 15);
