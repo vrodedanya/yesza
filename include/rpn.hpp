@@ -19,7 +19,7 @@ namespace yesza
 
 		friend expression make_equation(std::string str);
 	public:
-		double operator()(double argument)
+		double operator()(double argument = 0)
 		{
 			if (arguments.empty()) return 0;
 			std::stack<double> buffer;
