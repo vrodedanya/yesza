@@ -1,5 +1,5 @@
-#ifndef YEZHA_RPN_HPP
-#define YEZHA_RPN_HPP
+#ifndef YESZA_RPN_HPP
+#define YESZA_RPN_HPP
 
 #include <iostream>
 #include <stack>
@@ -10,7 +10,7 @@
 #include <functional>
 #include <cmath>
 
-namespace yezha
+namespace yesza
 {
 	class expression // TODO add functions supporting
 	{
@@ -306,4 +306,4 @@ namespace yezha
 
 }
 
-#endif //YEZHA_RPN_HPP
+#endif //YESZA_RPN_HPP
