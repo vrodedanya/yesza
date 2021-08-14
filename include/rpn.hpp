@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <functional>
 #include <cmath>
+#include "logger.hpp"
 
 namespace yesza
 {
@@ -314,6 +315,7 @@ namespace yesza
 	};
 	inline equation make_equation(std::string equation)
 	{
+		
 		state_machine sm(equation);
 		auto buf_equation = sm.process();
 		return buf_equation;
