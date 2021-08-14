@@ -12,66 +12,69 @@
 
 namespace yesza
 {
-	class expression // TODO add functions supporting
+	class equation // TODO add functions supporting
 	{
 	private:
-		std::stack<std::string> arguments;
+		std::stack<std::string> arguments; // change by vector
 
-		friend expression make_equation(std::string str);
+		friend class state_machine;
 	public:
-		double operator()(double argument = 0)
+		double operator()(double argument)
 		{
 			if (arguments.empty()) return 0;
+			auto arguments_buffer{arguments};
 			std::stack<double> buffer;
-			while (!arguments.empty())
+			std::cout << "Start counting equation with argument " <<  argument << std::endl;
+			while (!arguments_buffer.empty())
 			{
-				std::cout << arguments.top() << std::endl;
-				if (!std::isdigit(arguments.top()[0]) && !std::isdigit(arguments.top()[1])) // TODO change branches to map storage
+				std::cout << "\tCurrent: "<< arguments_buffer.top() << std::endl;
+				if (!std::isdigit(arguments_buffer.top()[0]) && !std::isdigit(arguments_buffer.top()[1]) && arguments_buffer.top() != "x") // TODO change branches to map storage
 				{
-					if (arguments.top() == "+")
+					std::cout << "Operation perfoming" << std::endl;
+					if (arguments_buffer.top() == "+")
 					{
 						double first = buffer.top();
 						buffer.pop();
 						double second = buffer.top();
 						buffer.top() = first + second;
 					}
-					else if (arguments.top() == "-")
+					else if (arguments_buffer.top() == "-")
 					{
 						double first = buffer.top();
 						buffer.pop();
 						double second = buffer.top();
 						buffer.top() = first - second;
 					}
-					else if (arguments.top() == "*")
+					else if (arguments_buffer.top() == "*")
 					{
 						double first = buffer.top();
 						buffer.pop();
 						double second = buffer.top();
 						buffer.top() = first * second;
 					}
-					else if (arguments.top() == "/")
+					else if (arguments_buffer.top() == "/")
 					{
 						double first = buffer.top();
 						buffer.pop();
 						double second = buffer.top();
 						buffer.top() = second / first;
 					}
-					else if (arguments.top() == "sin")
+					else if (arguments_buffer.top() == "sin")
 					{
 						double first = buffer.top();
 						buffer.top() = std::sin(first);
 					}
-					else if (arguments.top() == "cos")
+					else if (arguments_buffer.top() == "cos")
 					{
 						double first = buffer.top();
 						buffer.top() = std::cos(first);
 					}
-					else if (arguments.top() == "tan")
+					else if (arguments_buffer.top() == "tan")
 					{
 						double first = buffer.top();
 						buffer.top() = std::tan(first);
 					}
-					else if (arguments.top() == "cotan")
+					else if (arguments_buffer.top() == "cotan")
 					{
 						double first = buffer.top();
 						buffer.top() = std::tan(M_PI_2 - first);
@@ -79,11 +82,12 @@ namespace yesza
 				}
 				else
 				{
-					buffer.push(std::stod(arguments.top()));
+					std::cout << "Got number" << std::endl;
+					buffer.push((arguments_buffer.top() == "x") ? argument :std::stod(arguments_buffer.top()));
 				}
-				arguments.pop();
+				arguments_buffer.pop();
 			}
-			std::cout << std::endl;
+			std::cout << "Result: " << buffer.top() << std::endl;
 			return buffer.top();
 		}
 	};
@@ -154,10 +158,18 @@ namespace yesza
 			{
 				currentState = state::function;
 				auto isNotString = [](char ch){return !(ch >= 'a' && ch <='z' || ch >= 'A' && ch <= 'Z');};
-				std::string buff = getElement(it, handlingString.cend(), isNotString);
-				it += buff.size() - 1;
-				std::cout << "Got string: " << buff << std::endl;
-				operations.push_back(buff);
+				std::string buf = getElement(it, handlingString.cend(), isNotString);
+				it += buf.size() - 1;
+				std::cout << "Got string: " << buf << std::endl;
+				if (buf == "x")
+				{
+					currentState = state::number;
+					outputString.emplace_back(buf);
+				}
+				else
+				{
+					operations.push_back(buf);
+				}
 			}
 		}
 
@@ -224,8 +236,17 @@ namespace yesza
 				std::string string = getElement(it, handlingString.cend(), isNotString);
 				it += string.size() - 1;
 				std::cout << "Got string: " << string << std::endl;
-				operations.push_back(string);
-				currentState = state::function;
+				if (string == "x")
+				{
+					currentState = state::number;
+					outputString.emplace_back(string);
+				}
+				else
+				{
+					currentState = state::function;
+					operations.push_back(string);
+				}
+
 			}
 		}
 
@@ -246,8 +267,9 @@ namespace yesza
 				handlingString{str}
 		{
 		}
-		std::vector<std::string> process()
+		equation process()
 		{
+			std::cout << "Equation: " << handlingString << std::endl;
 			for (auto it = handlingString.cbegin() ; it != handlingString.cend() ; it++)
 			{
 				std::cout << "Current ch: " << *it << std::endl;
@@ -280,24 +302,21 @@ namespace yesza
 				operations.pop_back();
 			}
 			std::cout << std::endl;
-			return outputString;
+			equation buf;
+			while(!outputString.empty())
+			{
+				buf.arguments.push(outputString.back());
+				std::cout << outputString.back() << ' ';
+				outputString.pop_back();
+			}
+			return buf;
 		}
 	};
-	inline expression make_equation(std::string equation)
+	inline equation make_equation(std::string equation)
 	{
 		state_machine sm(equation);
-		auto outputString = sm.process();
-		
-		expression buf;
-		while(!outputString.empty())
-		{
-			buf.arguments.push(outputString.back());
-			std::cout << outputString.back() << ' ';
-			outputString.pop_back();
-		}
-			std::cout << std::endl;
-		
-		return buf;
+		auto buf_equation = sm.process();
+		return buf_equation;
 	}
 	inline double count(std::string equation)
 	{
