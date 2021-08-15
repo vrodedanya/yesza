@@ -3,15 +3,17 @@
 #include <gtest/gtest.h>
 #include "logger.hpp"
 
-
 // TODO Add more tests
 
 TEST(expression, sum)
 {
-	yesza::logger::turnOff();
+	yesza::logger::turnOn();
 	yesza::logger::setPriority(yesza::logger::Priority::LOW);
 	EXPECT_DOUBLE_EQ(yesza::count("5+10"), 15);
 	EXPECT_DOUBLE_EQ(yesza::count("0+5"), 5);
+	EXPECT_DOUBLE_EQ(yesza::count("-5+5"), 0);
+	EXPECT_DOUBLE_EQ(yesza::count("-5.5+5"), -0.5);
+	EXPECT_DOUBLE_EQ(yesza::count("-5.5+(-5)"), -10.5);
 	EXPECT_DOUBLE_EQ(yesza::count("10000+12314"), 22314);
 	EXPECT_DOUBLE_EQ(yesza::count(""), 0);
 	EXPECT_DOUBLE_EQ(yesza::count("5.5+ 1.4"), 6.9);
@@ -37,11 +39,13 @@ TEST(equation, sum)
 	EXPECT_DOUBLE_EQ(eq(-4), 16);
 	EXPECT_DOUBLE_EQ(eq(-4 * 5), 400);
 }
-TEST(expression, min)
+TEST(expression, sub)
 {
 	EXPECT_DOUBLE_EQ(yesza::count("5-10"), -5);
 	EXPECT_DOUBLE_EQ(yesza::count("0-5"), -5);
 	EXPECT_DOUBLE_EQ(yesza::count("10000-12314"), -2314);
 	EXPECT_DOUBLE_EQ(yesza::count("-10-20"), -30);
 	EXPECT_DOUBLE_EQ(yesza::count("5.5 - 1.4"), 4.1);
+	EXPECT_DOUBLE_EQ(yesza::count("(-(-(5+5)))"),10);
+	EXPECT_DOUBLE_EQ(yesza::count("(-(-(5-5+5)+5-5))"), 5);
 }
