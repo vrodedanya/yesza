@@ -310,11 +310,10 @@ namespace yesza
 				}
 			}
 			equation buf;
-			for (auto it = operations.rbegin() ; it != operations.rend() ; it++)
+			for (auto it = operations.begin() ; it != operations.end() ; it++)
 			{
-				outputString.push_back(std::move(*it));
+				buf.arguments.push(std::move(*it));
 			}
-
 			for (auto it = outputString.rbegin() ; it != outputString.rend() ; it++)
 			{
 				logger::low("state_machine", "Argument", *it);
