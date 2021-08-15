@@ -16,65 +16,65 @@ namespace yesza
 	class equation // TODO add functions supporting
 	{
 	private:
-		std::stack<std::string> arguments; // change by vector
+		std::vector<std::string> arguments; // change by vector
 		friend class state_machine;
 	public:
 		double operator()(double argument = 0)
 		{
 			logger::medium("equation()", "called operator()");
 			if (arguments.empty()) return 0;
-			auto arguments_buffer{arguments};
 			std::stack<double> buffer;
-			while (!arguments_buffer.empty())
+
+			for (auto it = arguments.cbegin(); it != arguments.cend() ; it++)
 			{
-				logger::low("equation()", "got", arguments_buffer.top());
-				if (!std::isdigit(arguments_buffer.top()[0]) && !std::isdigit(arguments_buffer.top()[1]) && arguments_buffer.top() != "x") // TODO change branches to map storage
+				logger::low("equation()", "got", *it);
+				if (!std::isdigit((*it)[0]) && !std::isdigit((*it)[1]) && *it != "x") // TODO change branches to map storage
 				{
-					logger::low("equation()", "perfom operation", arguments_buffer.top());
-					if (arguments_buffer.top() == "+")
+					logger::low("equation()", "perfom operation", *it);
+					if (*it == "+")
 					{
 						double first = buffer.top();
 						buffer.pop();
 						double second = buffer.top();
 						buffer.top() = first + second;
 					}
-					else if (arguments_buffer.top() == "-")
+					else if (*it == "-")
 					{
 						double first = buffer.top();
 						buffer.pop();
 						double second = buffer.top();
 						buffer.top() = first - second;
 					}
-					else if (arguments_buffer.top() == "*")
+					else if (*it == "*")
 					{
 						double first = buffer.top();
 						buffer.pop();
 						double second = buffer.top();
 						buffer.top() = first * second;
 					}
-					else if (arguments_buffer.top() == "/")
+					else if (*it == "/")
 					{
 						double first = buffer.top();
 						buffer.pop();
 						double second = buffer.top();
 						buffer.top() = second / first;
 					}
-					else if (arguments_buffer.top() == "sin")
+					else if (*it == "sin")
 					{
 						double first = buffer.top();
 						buffer.top() = std::sin(first);
 					}
-					else if (arguments_buffer.top() == "cos")
+					else if (*it == "cos")
 					{
 						double first = buffer.top();
 						buffer.top() = std::cos(first);
 					}
-					else if (arguments_buffer.top() == "tan")
+					else if (*it == "tan")
 					{
 						double first = buffer.top();
 						buffer.top() = std::tan(first);
 					}
-					else if (arguments_buffer.top() == "cotan")
+					else if (*it == "cotan")
 					{
 						double first = buffer.top();
 						buffer.top() = std::tan(M_PI_2 - first);
@@ -82,10 +82,9 @@ namespace yesza
 				}
 				else
 				{
-					logger::low("equation()", "argument", arguments_buffer.top());
-					buffer.push((arguments_buffer.top() == "x") ? argument :std::stod(arguments_buffer.top()));
+					logger::low("equation()", "argument", *it);
+					buffer.push((*it == "x") ? argument :std::stod(*it));
 				}
-				arguments_buffer.pop();
 			}
 			logger::low("equation()", "result");
 			return buffer.top();
@@ -308,16 +307,12 @@ namespace yesza
 					process_function(it);
 				}
 			}
+			for (auto it = operations.rbegin() ; it != operations.rend() ; it++)
+			{
+				result.push_back(std::move(*it));
+			}
 			equation buf;
-			for (auto it = operations.begin() ; it != operations.end() ; it++)
-			{
-				buf.arguments.push(std::move(*it));
-			}
-			for (auto it = result.rbegin() ; it != result.rend() ; it++)
-			{
-				logger::low("state_machine", "Argument", *it);
-				buf.arguments.push(std::move(*it));
-			}
+			buf.arguments = std::move(result);
 			return buf;
 		}
 	};
