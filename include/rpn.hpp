@@ -97,11 +97,10 @@ namespace yesza
 	{
 	private:
 		std::vector<std::string> operations; // storage operations
-		std::vector<std::string> outputString;
-		std::string handlingString;
+		std::vector<std::string> result;
 		const std::vector<char> operators{'+', '-', '*', '/'}; // TODO add ^
-
 		const std::vector<std::string> functions{"sin", "cos", "tan", "cotan"}; // TODO add more functions
+		std::string handlingString;
 
 		enum state
 		{
@@ -110,6 +109,7 @@ namespace yesza
 			oper,
 			function,
 		} currentState = state::undefined;
+		
 		enum mod
 		{
 			empty,
@@ -136,13 +136,13 @@ namespace yesza
 			logger::medium("state_machine", "undefined branch");
 			if (std::isdigit(static_cast<unsigned char>(*it)))
 			{
-				logger::low("state_machine", "it's a number");
+				logger::low("state_machine", "it's a string_number");
 				currentState = state::number;
 				auto isNotNumber = [](char ch){return !(std::isdigit(ch) || ch == '.');};
-				std::string string_buffer = getElement(it, handlingString.cend(), isNotNumber);
-				logger::low("state_machine", "number is", string_buffer);
-				it += string_buffer.size() - 1;
-				outputString.emplace_back(string_buffer);
+				std::string string_number = getElement(it, handlingString.cend(), isNotNumber);
+				logger::low("state_machine", "string_number is", string_number);
+				it += string_number.size() - 1;
+				result.emplace_back(string_number);
 			}
 			else if (std::find(operators.begin(), operators.end(), *it) != operators.end())
 			{
@@ -161,19 +161,19 @@ namespace yesza
 			{
 				currentState = state::function;
 				auto isNotString = [](char ch){return !((ch >= 'a' && ch <='z') || (ch >= 'A' && ch <= 'Z'));};
-				std::string buf = getElement(it, handlingString.cend(), isNotString);
-				it += buf.size() - 1;
-				if (buf == "x")
+				std::string string_function = getElement(it, handlingString.cend(), isNotString);
+				it += string_function.size() - 1;
+				if (string_function == "x")
 				{
-					logger::low("state_machine", "it's undefined variable", buf);
+					logger::low("state_machine", "it's undefined variable", string_function);
 					currentState = state::number;
-					outputString.emplace_back(buf);
+					result.emplace_back(string_function);
 				}
 				else
 				{
-					logger::low("state_machine", "it's a function");
-					logger::low("state_machine", "function is", buf);
-					operations.push_back(buf);
+					logger::low("state_machine", "it's a string_function");
+					logger::low("state_machine", "string_function is", string_function);
+					operations.push_back(string_function);
 				}
 			}
 		}
@@ -186,7 +186,7 @@ namespace yesza
 				logger::low("state_machine", "it's a close bracket");
 				while(operations.back() != "(")
 				{
-					outputString.push_back(operations.back());
+					result.push_back(operations.back());
 					operations.pop_back();
 				}
 				operations.pop_back();
@@ -196,20 +196,20 @@ namespace yesza
 			logger::low("state_machine", "it's a operator", *it);
 			currentState = state::oper;
 			while (!operations.empty() && (operations.back() == std::string("*") || operations.back() == "/" 
-					|| operations.back() == "sin"))
+					|| std::find(functions.begin(), functions.end(), operations.back()) != functions.end()))
 			{
-				outputString.push_back(operations.back());
+				result.push_back(operations.back());
 				operations.pop_back();
 			}
-			std::string string_buffer;
-			string_buffer = *it;
+			std::string string_operator;
+			string_operator = *it;
 			if (*it == '-')
 			{
 				if (currentMod == mod::negative) currentMod = mod::empty;
 				else currentMod = mod::negative;
-				string_buffer = "+";
+				string_operator = "+";
 			}
-			operations.emplace_back(string_buffer);
+			operations.emplace_back(string_operator);
 		}
 		
 		void process_oper(std::string::const_iterator& it)
@@ -220,13 +220,13 @@ namespace yesza
 				logger::low("state_machine", "it's a number");
 				currentState = state::number;
 				auto isNotNumber = [](char ch){return !(std::isdigit(ch) || ch == '.');};
-				std::string string_buffer = getElement(it, handlingString.cend(), isNotNumber);
-				it += string_buffer.size() - 1;
-				logger::low("state_machine", "number is", string_buffer);
-				if (currentMod == mod::empty) outputString.push_back(string_buffer);
+				std::string string_number = getElement(it, handlingString.cend(), isNotNumber);
+				it += string_number.size() - 1;
+				logger::low("state_machine", "number is", string_number);
+				if (currentMod == mod::empty) result.push_back(string_number);
 				else 
 				{
-					outputString.push_back('-' + string_buffer);
+					result.push_back('-' + string_number);
 					currentMod = mod::empty;
 				}
 			}
@@ -246,22 +246,21 @@ namespace yesza
 			else if (*it != ' ')
 			{
 				auto isNotString = [](char ch){return !((ch >= 'a' && ch <='z') || (ch >= 'A' && ch <= 'Z'));};
-				std::string string = getElement(it, handlingString.cend(), isNotString);
-				it += string.size() - 1;
-				if (string == "x")
+				std::string string_function = getElement(it, handlingString.cend(), isNotString);
+				it += string_function.size() - 1;
+				if (string_function == "x")
 				{
 					logger::low("state_machine", "it's a undefined variable");
 					currentState = state::number;
-					outputString.emplace_back(string);
+					result.emplace_back(string_function);
 				}
 				else
 				{
 					logger::low("state_machine", "it's a function");
-					logger::low("state_machine", "function is", string);
+					logger::low("state_machine", "function is", string_function);
 					currentState = state::function;
-					operations.push_back(string);
+					operations.push_back(string_function);
 				}
-
 			}
 		}
 
@@ -314,12 +313,11 @@ namespace yesza
 			{
 				buf.arguments.push(std::move(*it));
 			}
-			for (auto it = outputString.rbegin() ; it != outputString.rend() ; it++)
+			for (auto it = result.rbegin() ; it != result.rend() ; it++)
 			{
 				logger::low("state_machine", "Argument", *it);
 				buf.arguments.push(std::move(*it));
 			}
-			
 			return buf;
 		}
 	};
