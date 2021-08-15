@@ -17,10 +17,9 @@ namespace yesza
 	{
 	private:
 		std::stack<std::string> arguments; // change by vector
-
 		friend class state_machine;
 	public:
-		double operator()(double argument)
+		double operator()(double argument = 0)
 		{
 			logger::medium("equation()", "called operator()");
 			if (arguments.empty()) return 0;
@@ -161,7 +160,7 @@ namespace yesza
 			else if (*it != ' ')
 			{
 				currentState = state::function;
-				auto isNotString = [](char ch){return !(ch >= 'a' && ch <='z' || ch >= 'A' && ch <= 'Z');};
+				auto isNotString = [](char ch){return !((ch >= 'a' && ch <='z') || (ch >= 'A' && ch <= 'Z'));};
 				std::string buf = getElement(it, handlingString.cend(), isNotString);
 				it += buf.size() - 1;
 				if (buf == "x")
@@ -246,7 +245,7 @@ namespace yesza
 			}
 			else if (*it != ' ')
 			{
-				auto isNotString = [](char ch){return !(ch >= 'a' && ch <='z' || ch >= 'A' && ch <= 'Z');};
+				auto isNotString = [](char ch){return !((ch >= 'a' && ch <='z') || (ch >= 'A' && ch <= 'Z'));};
 				std::string string = getElement(it, handlingString.cend(), isNotString);
 				it += string.size() - 1;
 				if (string == "x")
@@ -293,7 +292,6 @@ namespace yesza
 				logger::low("state_machine", "Got", *it);
 				if (*it == ' ') continue;
 				if (*it == '\0') break;
-
 				if (currentState == state::undefined)
 				{
 					process_undefined(it);
@@ -311,16 +309,18 @@ namespace yesza
 					process_function(it);
 				}
 			}
+			equation buf;
 			for (auto it = operations.rbegin() ; it != operations.rend() ; it++)
 			{
 				outputString.push_back(std::move(*it));
 			}
-			equation buf;
+
 			for (auto it = outputString.rbegin() ; it != outputString.rend() ; it++)
 			{
 				logger::low("state_machine", "Argument", *it);
 				buf.arguments.push(std::move(*it));
 			}
+			
 			return buf;
 		}
 	};
@@ -333,7 +333,7 @@ namespace yesza
 	}
 	inline double count(std::string equation)
 	{
-		return make_equation(equation)(0);
+		return make_equation(equation)();
 	}
 }
 
