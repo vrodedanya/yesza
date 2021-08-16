@@ -1,7 +1,6 @@
 #ifndef YESZA_RPN_HPP
 #define YESZA_RPN_HPP
 
-#include <iostream>
 #include <stack>
 #include <vector>
 #include <string>
@@ -9,14 +8,29 @@
 #include <stdexcept>
 #include <functional>
 #include <cmath>
+#include <map>
+
 #include "logger.hpp"
 
 namespace yesza
 {
-	class equation // TODO add functions supporting
+	inline std::map<std::string, std::function<void(std::stack<double>&)>> operationsCallback = 
+	{
+		{"+", [](std::stack<double>& stack){double first = stack.top(); stack.pop(); stack.top() = first + stack.top();}},
+		{"-", [](std::stack<double>& stack){double first = stack.top(); stack.pop(); stack.top() = first - stack.top();}},
+		{"*", [](std::stack<double>& stack){double first = stack.top(); stack.pop(); stack.top() = first * stack.top();}},
+		{"/", [](std::stack<double>& stack){double first = stack.top(); stack.pop(); stack.top() = stack.top() / first;}},
+		{"^", [](std::stack<double>& stack){double first = stack.top(); stack.pop(); stack.top() = std::pow(stack.top(), first);}},
+		{"~", [](std::stack<double>& stack){stack.top() = -stack.top();}},
+		{"sin", [](std::stack<double>& stack){stack.top() = std::sin(stack.top());}},
+		{"cos", [](std::stack<double>& stack){stack.top() = std::cos(stack.top());}},
+		{"tan", [](std::stack<double>& stack){stack.top() = std::tan(stack.top());}},
+		{"cotan", [](std::stack<double>& stack){stack.top() = std::tan(M_PI_2 - stack.top());}},
+	};
+	class equation
 	{
 	private:
-		std::vector<std::string> arguments; // change by vector
+		std::vector<std::string> arguments; 
 		friend class state_machine;
 	public:
 		double operator()(double argument = 0)
@@ -28,72 +42,17 @@ namespace yesza
 			for (auto it = arguments.cbegin(); it != arguments.cend() ; it++)
 			{
 				logger::low("equation()", "got", *it);
-				if (!std::isdigit((*it)[0]) && !std::isdigit((*it)[1]) && *it != "x") // TODO change branches to map storage
+				if (operationsCallback.find(*it) != operationsCallback.end())
 				{
 					logger::low("equation()", "perfom operation", *it);
-					if (*it == "+")
-					{
-						double first = buffer.top();
-						buffer.pop();
-						double second = buffer.top();
-						buffer.top() = first + second;
-					}
-					else if (*it == "-")
-					{
-						double first = buffer.top();
-						buffer.pop();
-						double second = buffer.top();
-						buffer.top() = first - second;
-					}
-					else if (*it == "*")
-					{
-						double first = buffer.top();
-						buffer.pop();
-						double second = buffer.top();
-						buffer.top() = first * second;
-					}
-					else if (*it == "/")
-					{
-						double first = buffer.top();
-						buffer.pop();
-						double second = buffer.top();
-						buffer.top() = second / first;
-					}
-					else if (*it == "^")
-					{
-						double first = buffer.top();
-						buffer.pop();
-						buffer.top() = std::pow(buffer.top(), first);
-					}
-					else if (*it == "~")
-					{
-						buffer.top() = -buffer.top();
-					}
-					else if (*it == "sin")
-					{
-						double first = buffer.top();
-						buffer.top() = std::sin(first);
-					}
-					else if (*it == "cos")
-					{
-						double first = buffer.top();
-						buffer.top() = std::cos(first);
-					}
-					else if (*it == "tan")
-					{
-						double first = buffer.top();
-						buffer.top() = std::tan(first);
-					}
-					else if (*it == "cotan")
-					{
-						double first = buffer.top();
-						buffer.top() = std::tan(M_PI_2 - first);
-					}
+					auto callback = operationsCallback.find(*it);
+					if (callback == operationsCallback.end()) throw std::runtime_error("This operation doesn't exist");
+					callback->second(buffer);
 				}
 				else
 				{
 					logger::low("equation()", "argument", *it);
-					buffer.push((*it == "x") ? argument :std::stod(*it));
+					buffer.push((!std::isdigit((*it)[0])) ? argument : std::stod(*it));
 				}
 			}
 			logger::low("equation()", "result", buffer.top());
@@ -101,14 +60,13 @@ namespace yesza
 		}
 	};
 
-	// TODO fix issue with negative blocks
 	class state_machine
 	{
 	private:
 		std::vector<std::string> operations; // storage operations
 		std::vector<std::string> result;
-		const std::vector<char> operators{'+', '-', '*', '/', '^'}; // TODO add ^
-		const std::vector<std::string> functions{"sin", "cos", "tan", "cotan"}; // TODO add more functions
+		std::vector<char> operators;
+		std::vector<std::string> functions;
 		std::string handlingString;
 
 		enum state
@@ -316,6 +274,17 @@ namespace yesza
 				handlingString{str}
 		{
 			logger::medium("state_machine", "called state_machine constructor. Handling string:", handlingString);
+			for (auto it = operationsCallback.cbegin() ; it != operationsCallback.cend() ; it++)
+			{
+				if (it->first.size() == 1)
+				{
+					operators.push_back(it->first[0]);
+				}
+				else
+				{
+					functions.push_back(it->first);
+				}
+			}
 		}
 		equation process()
 		{
