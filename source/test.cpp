@@ -5,23 +5,36 @@
 
 // TODO Add more tests
 
-TEST(expression, sum)
+TEST(expression, baseOperators)
 {
-	yesza::logger::turnOn();
+	yesza::logger::turnOff();
 	yesza::logger::setPriority(yesza::logger::Priority::LOW);
+
 	EXPECT_DOUBLE_EQ(yesza::count("5+10"), 15);
-	EXPECT_DOUBLE_EQ(yesza::count("0+5"), 5);
+	EXPECT_DOUBLE_EQ(yesza::count("5-10"), -5);
+	EXPECT_DOUBLE_EQ(yesza::count("5*10"), 50);
+	EXPECT_DOUBLE_EQ(yesza::count("5/10"), 0.5);
+	EXPECT_DOUBLE_EQ(yesza::count("2^5"), 32);
+
+	EXPECT_THROW(yesza::count("5/0"), std::runtime_error);
+
 	EXPECT_DOUBLE_EQ(yesza::count("-5+5"), 0);
 	EXPECT_DOUBLE_EQ(yesza::count("-5.5+5"), -0.5);
 	EXPECT_DOUBLE_EQ(yesza::count("-5.5+(-5)"), -10.5);
-	EXPECT_DOUBLE_EQ(yesza::count("10000+12314"), 22314);
 	EXPECT_DOUBLE_EQ(yesza::count(""), 0);
 	EXPECT_DOUBLE_EQ(yesza::count("5.5+ 1.4"), 6.9);
 	EXPECT_DOUBLE_EQ(yesza::count("-5.5+ 1.4"), -4.1);
-	EXPECT_DOUBLE_EQ(yesza::count("-5 * (7+3)"), -50);
-	EXPECT_DOUBLE_EQ(yesza::count("-5 * (-7+3)"), 20);
-	EXPECT_DOUBLE_EQ(yesza::count("-5 * (7-3)"), -20);
-	EXPECT_DOUBLE_EQ(yesza::count("-5 * -(7-3)"), 20);
+	EXPECT_DOUBLE_EQ(yesza::count("-5 + (7+3)"), 5);
+	EXPECT_DOUBLE_EQ(yesza::count("-5 + (-7+3)"), -9);
+	EXPECT_DOUBLE_EQ(yesza::count("-5 + (7-3)"), -1);
+	EXPECT_DOUBLE_EQ(yesza::count("-5 + -(7-3)"), -9);
+	EXPECT_DOUBLE_EQ(yesza::count("5-10"), -5);
+	EXPECT_DOUBLE_EQ(yesza::count("0-5"), -5);
+	EXPECT_DOUBLE_EQ(yesza::count("10000-12314"), -2314);
+	EXPECT_DOUBLE_EQ(yesza::count("-10-20"), -30);
+	EXPECT_DOUBLE_EQ(yesza::count("5.5 - 1.4"), 4.1);
+	EXPECT_DOUBLE_EQ(yesza::count("2^10"), 1024);
+
 }
 TEST(equation, sum)
 {
@@ -38,14 +51,20 @@ TEST(equation, sum)
 	EXPECT_DOUBLE_EQ(eq(0.1), 0.01);
 	EXPECT_DOUBLE_EQ(eq(-4), 16);
 	EXPECT_DOUBLE_EQ(eq(-4 * 5), 400);
+	
+	eq = yesza::make_equation("2*x^2+2*x+4");
+	EXPECT_DOUBLE_EQ(eq(2), 16);
+	EXPECT_DOUBLE_EQ(eq(2.4), 20.32);
+	EXPECT_DOUBLE_EQ(eq(1.5), 11.5);
+	EXPECT_DOUBLE_EQ(eq(4), 44);
+	EXPECT_DOUBLE_EQ(eq(5), 64);
+	EXPECT_DOUBLE_EQ(eq(6), 88);
+	EXPECT_DOUBLE_EQ(eq(34), 2384);
+	EXPECT_DOUBLE_EQ(eq(56), 6388);
+
 }
 TEST(expression, sub)
 {
-	EXPECT_DOUBLE_EQ(yesza::count("5-10"), -5);
-	EXPECT_DOUBLE_EQ(yesza::count("0-5"), -5);
-	EXPECT_DOUBLE_EQ(yesza::count("10000-12314"), -2314);
-	EXPECT_DOUBLE_EQ(yesza::count("-10-20"), -30);
-	EXPECT_DOUBLE_EQ(yesza::count("5.5 - 1.4"), 4.1);
 	EXPECT_DOUBLE_EQ(yesza::count("(-(-(5+5)))"),10);
 	EXPECT_DOUBLE_EQ(yesza::count("(-(-(5-5+5)+5-5))"), 5);
 }
