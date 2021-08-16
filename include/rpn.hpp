@@ -14,7 +14,7 @@
 
 namespace yesza
 {
-	inline std::map<std::string, std::function<void(std::stack<double>&)>> operationsCallback = 
+	inline const std::map<std::string, std::function<void(std::stack<double>&)>> operationsCallback = 
 	{
 		{"+", [](std::stack<double>& stack){double first = stack.top(); stack.pop(); stack.top() = first + stack.top();}},
 		{"-", [](std::stack<double>& stack){double first = stack.top(); stack.pop(); stack.top() = first - stack.top();}},
