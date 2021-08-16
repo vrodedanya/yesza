@@ -59,6 +59,12 @@ namespace yesza
 						double second = buffer.top();
 						buffer.top() = second / first;
 					}
+					else if (*it == "^")
+					{
+						double first = buffer.top();
+						buffer.pop();
+						buffer.top() = std::pow(buffer.top(), first);
+					}
 					else if (*it == "~")
 					{
 						buffer.top() = -buffer.top();
@@ -101,7 +107,7 @@ namespace yesza
 	private:
 		std::vector<std::string> operations; // storage operations
 		std::vector<std::string> result;
-		const std::vector<char> operators{'+', '-', '*', '/'}; // TODO add ^
+		const std::vector<char> operators{'+', '-', '*', '/', '^'}; // TODO add ^
 		const std::vector<std::string> functions{"sin", "cos", "tan", "cotan"}; // TODO add more functions
 		std::string handlingString;
 
