@@ -1,15 +1,11 @@
 #include "rpn.hpp"
 #include <iostream>
 #include <gtest/gtest.h>
-#include "logger.hpp"
 
 // TODO Add more tests
 
 TEST(expression, baseOperators)
 {
-	yesza::logger::turnOff();
-	yesza::logger::setPriority(yesza::logger::Priority::LOW);
-
 	EXPECT_DOUBLE_EQ(yesza::count("5+10"), 15);
 	EXPECT_DOUBLE_EQ(yesza::count("5-10"), -5);
 	EXPECT_DOUBLE_EQ(yesza::count("5*10"), 50);

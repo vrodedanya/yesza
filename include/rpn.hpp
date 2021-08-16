@@ -10,8 +10,6 @@
 #include <cmath>
 #include <map>
 
-#include "logger.hpp"
-
 namespace yesza
 {
 	inline const std::map<std::string, std::function<void(std::stack<double>&)>> operationsCallback = 
@@ -36,27 +34,22 @@ namespace yesza
 	public:
 		double operator()(double argument = 0)
 		{
-			logger::medium("equation()", "called operator()");
 			if (arguments.empty()) throw std::runtime_error("Doesn't have arguments");
 			std::stack<double> buffer;
 
 			for (auto it = arguments.cbegin(); it != arguments.cend() ; it++)
 			{
-				logger::low("equation()", "got", *it);
 				if (operationsCallback.find(*it) != operationsCallback.end())
 				{
-					logger::low("equation()", "perfom operation", *it);
 					auto callback = operationsCallback.find(*it);
 					if (callback == operationsCallback.end()) throw std::runtime_error("This operation doesn't exist");
 					callback->second(buffer);
 				}
 				else
 				{
-					logger::low("equation()", "argument", *it);
 					buffer.push((!std::isdigit((*it)[0])) ? argument : std::stod(*it));
 				}
 			}
-			logger::low("equation()", "result", buffer.top());
 			return buffer.top();
 		}
 	};
@@ -103,14 +96,11 @@ namespace yesza
 
 		void process_undefined(std::string::const_iterator& it)
 		{
-			logger::medium("state_machine", "undefined branch");
 			if (std::isdigit(static_cast<unsigned char>(*it)))
 			{
-				logger::low("state_machine", "it's a string_number");
 				currentState = state::number;
 				auto isNotNumber = [](char ch){return !(std::isdigit(ch) || ch == '.');};
 				std::string string_number = getElement(it, handlingString.cend(), isNotNumber);
-				logger::low("state_machine", "string_number is", string_number);
 				it += string_number.size() - 1;
 				result.emplace_back(string_number);
 			}
@@ -118,17 +108,14 @@ namespace yesza
 			{
 				if (*it == '*' || *it == '/') throw std::runtime_error(std::string("Bad operator in the begining. Got ") + *it);
 				currentState = state::oper;
-				logger::low("state_machine", "it's a operator");
 				if (*it == '-') 
 				{
 					mods.push(mod::negative);
-					logger::low("state_machine", "set negative mode");
 				}
 			}
 			else if (*it == '(')
 			{
 				currentState = state::oper;
-				logger::low("state_machine", "it's a open bracket");
 				operations.push_back("(");
 			}
 			else if (*it != ' ')
@@ -139,14 +126,11 @@ namespace yesza
 				it += string_function.size() - 1;
 				if (string_function == "x")
 				{
-					logger::low("state_machine", "it's undefined variable", string_function);
 					currentState = state::number;
 					result.emplace_back(string_function);
 				}
 				else
 				{
-					logger::low("state_machine", "it's a string_function");
-					logger::low("state_machine", "string_function is", string_function);
 					operations.push_back(string_function);
 				}
 			}
@@ -154,10 +138,8 @@ namespace yesza
 
 		void process_number(std::string::const_iterator& it)
 		{
-			logger::medium("state_machine", "number branch");
 			if (*it == ')')
 			{
-				logger::low("state_machine", "it's a close bracket");
 				while(operations.back() != "(")
 				{
 					result.push_back(operations.back());
@@ -166,14 +148,12 @@ namespace yesza
 				operations.pop_back();
 				if (!mods.empty() && mods.top() == mod::negativeBlock) 
 				{
-					logger::low("state_machine", "pushing negative operator");
 					result.push_back("~");
 					mods.pop();
 				}
 				return;
 			}
 			if (std::find(operators.begin(), operators.end(), *it) == operators.end()) throw std::runtime_error(std::string("Expected operator. Got ") + std::to_string(*it));
-			logger::low("state_machine", "it's a operator", *it);
 			currentState = state::oper;
 // TODO Add prioty to operations
 			if (*it == '*' || *it == '/')
@@ -205,26 +185,21 @@ namespace yesza
 		
 		void process_oper(std::string::const_iterator& it)
 		{
-			logger::medium("state_machine", "operator branch");
 			if (std::isdigit(static_cast<unsigned char>(*it)))
 			{
-				logger::low("state_machine", "it's a number");
 				currentState = state::number;
 				auto isNotNumber = [](char ch){return !(std::isdigit(ch) || ch == '.');};
 				std::string string_number = getElement(it, handlingString.cend(), isNotNumber);
 				it += string_number.size() - 1;
-				logger::low("state_machine", "number is", string_number);
 				result.push_back(string_number);
 				if (!mods.empty() && mods.top() == mod::negative)
 				{
-					logger::low("state_machine", "pushing negative operator");
 					result.push_back("~");
 					mods.pop();
 				}
 			}
 			else if (*it == '(')
 			{
-				logger::low("state_machine", "it's open bracket");
 				currentState = state::oper;
 				operations.push_back("(");
 				if (!mods.empty())
@@ -237,7 +212,6 @@ namespace yesza
 			{
 				if (*it == '*' || *it == '/') throw std::runtime_error(std::string("Bad operator in the begining. Got ") + *it);
 				currentState = state::oper;
-				logger::low("state_machine", "it's a operator");
 				if (*it == '-') 
 				{
 					mods.push(mod::negative);
@@ -250,14 +224,11 @@ namespace yesza
 				it += string_function.size() - 1;
 				if (string_function == "x")
 				{
-					logger::low("state_machine", "it's a undefined variable");
 					currentState = state::number;
 					result.emplace_back(string_function);
 				}
 				else
 				{
-					logger::low("state_machine", "it's a function");
-					logger::low("state_machine", "function is", string_function);
 					currentState = state::function;
 					operations.push_back(string_function);
 				}
@@ -266,10 +237,8 @@ namespace yesza
 
 		void process_function(std::string::const_iterator& it)
 		{
-			logger::medium("state_machine", "function branch");
 			if (*it == '(')
 			{
-				logger::low("state_machine", "it's open bracket");
 				currentState = state::oper;
 				operations.push_back("(");
 				if (!mods.empty())
@@ -286,7 +255,6 @@ namespace yesza
 			:
 				handlingString{str}
 		{
-			logger::medium("state_machine", "called state_machine constructor. Handling string:", handlingString);
 			for (auto it = operationsCallback.cbegin() ; it != operationsCallback.cend() ; it++)
 			{
 				if (it->first.size() == 1)
@@ -301,12 +269,10 @@ namespace yesza
 		}
 		equation process()
 		{
-			logger::medium("state_machine", "called state_machine::process");
 			for (auto it = handlingString.cbegin() ; it != handlingString.cend() ; it++)
 			{
 				if (*it == ' ') continue;
 				if (*it == '\0') break;
-				logger::low("state_machine", "Got", *it);
 				if (currentState == state::undefined)
 				{
 					process_undefined(it);
@@ -335,7 +301,6 @@ namespace yesza
 	};
 	inline equation make_equation(std::string equation)
 	{
-		yesza::logger::medium("make_equation", "called make_equation function");
 		state_machine sm(equation);
 		auto buf_equation = sm.process();
 		return buf_equation;
