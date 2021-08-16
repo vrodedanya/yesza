@@ -8,3 +8,7 @@ Copy header to your project
 auto func = yesza::make_equation("50+60*sin(45+456)*(250-30)");
 std::cout << func() << std::endl;
 ```
+```c++
+auto func = yesza::make_equation("5 * x^2 + 2*x + 5");
+std::cout << func(15) << std::endl;
+```
