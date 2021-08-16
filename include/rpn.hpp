@@ -174,11 +174,23 @@ namespace yesza
 			if (std::find(operators.begin(), operators.end(), *it) == operators.end()) throw std::runtime_error(std::string("Expected operator. Got ") + std::to_string(*it));
 			logger::low("state_machine", "it's a operator", *it);
 			currentState = state::oper;
-			while (!operations.empty() && (operations.back() == std::string("*") || operations.back() == "/" 
-					|| std::find(functions.begin(), functions.end(), operations.back()) != functions.end()))
+// TODO Add prioty to operations
+			if (*it == '*' || *it == '/')
 			{
-				result.push_back(operations.back());
-				operations.pop_back();
+				while (!operations.empty() && (operations.back() == std::string("^") || std::find(functions.begin(), functions.end(), operations.back()) != functions.end()))
+				{
+					result.push_back(operations.back());
+					operations.pop_back();
+				}
+			}
+			else if (*it == '+' || *it == '-')
+			{
+				while (!operations.empty() && (operations.back() == std::string("*") || operations.back() == "/" || operations.back() == "^"
+						|| std::find(functions.begin(), functions.end(), operations.back()) != functions.end()))
+				{
+					result.push_back(operations.back());
+					operations.pop_back();
+				}
 			}
 			std::string string_operator;
 			string_operator = *it;
