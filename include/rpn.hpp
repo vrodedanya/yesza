@@ -19,7 +19,8 @@ namespace yesza
 		{"+", [](std::stack<double>& stack){double first = stack.top(); stack.pop(); stack.top() = first + stack.top();}},
 		{"-", [](std::stack<double>& stack){double first = stack.top(); stack.pop(); stack.top() = first - stack.top();}},
 		{"*", [](std::stack<double>& stack){double first = stack.top(); stack.pop(); stack.top() = first * stack.top();}},
-		{"/", [](std::stack<double>& stack){double first = stack.top(); stack.pop(); stack.top() = stack.top() / first;}},
+		{"/", [](std::stack<double>& stack){double first = stack.top(); stack.pop(); 
+											   if (first == 0) throw std::runtime_error("Division by zero"); stack.top() = stack.top() / first;}},
 		{"^", [](std::stack<double>& stack){double first = stack.top(); stack.pop(); stack.top() = std::pow(stack.top(), first);}},
 		{"~", [](std::stack<double>& stack){stack.top() = -stack.top();}},
 		{"sin", [](std::stack<double>& stack){stack.top() = std::sin(stack.top());}},
