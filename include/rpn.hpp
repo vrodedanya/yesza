@@ -37,7 +37,7 @@ namespace yesza
 		double operator()(double argument = 0)
 		{
 			logger::medium("equation()", "called operator()");
-			if (arguments.empty()) return 0;
+			if (arguments.empty()) throw std::runtime_error("Doesn't have arguments");
 			std::stack<double> buffer;
 
 			for (auto it = arguments.cbegin(); it != arguments.cend() ; it++)

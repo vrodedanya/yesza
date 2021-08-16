@@ -21,7 +21,7 @@ TEST(expression, baseOperators)
 	EXPECT_DOUBLE_EQ(yesza::count("-5+5"), 0);
 	EXPECT_DOUBLE_EQ(yesza::count("-5.5+5"), -0.5);
 	EXPECT_DOUBLE_EQ(yesza::count("-5.5+(-5)"), -10.5);
-	EXPECT_DOUBLE_EQ(yesza::count(""), 0);
+	EXPECT_THROW(yesza::count(""), std::runtime_error);
 	EXPECT_DOUBLE_EQ(yesza::count("5.5+ 1.4"), 6.9);
 	EXPECT_DOUBLE_EQ(yesza::count("-5.5+ 1.4"), -4.1);
 	EXPECT_DOUBLE_EQ(yesza::count("-5 + (7+3)"), 5);
