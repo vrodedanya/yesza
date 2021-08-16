@@ -59,6 +59,10 @@ namespace yesza
 						double second = buffer.top();
 						buffer.top() = second / first;
 					}
+					else if (*it == "~")
+					{
+						buffer.top() = -buffer.top();
+					}
 					else if (*it == "sin")
 					{
 						double first = buffer.top();
@@ -86,7 +90,7 @@ namespace yesza
 					buffer.push((*it == "x") ? argument :std::stod(*it));
 				}
 			}
-			logger::low("equation()", "result");
+			logger::low("equation()", "result", buffer.top());
 			return buffer.top();
 		}
 	};
@@ -112,8 +116,10 @@ namespace yesza
 		enum mod
 		{
 			empty,
-			negative
-		} currentMod = mod::empty;
+			negative,
+			negativeBlock,
+		};
+		std::stack<mod> mods;
 	
 		template <typename ITERATOR, typename CALLABLE>
 		std::string getElement(ITERATOR begin, ITERATOR end, CALLABLE functor)
@@ -148,7 +154,11 @@ namespace yesza
 				if (*it == '*' || *it == '/') throw std::runtime_error(std::string("Bad operator in the begining. Got ") + *it);
 				currentState = state::oper;
 				logger::low("state_machine", "it's a operator");
-				if (*it == '-') currentMod = mod::negative;
+				if (*it == '-') 
+				{
+					mods.push(mod::negative);
+					logger::low("state_machine", "set negative mode");
+				}
 			}
 			else if (*it == '(')
 			{
@@ -189,6 +199,12 @@ namespace yesza
 					operations.pop_back();
 				}
 				operations.pop_back();
+				if (!mods.empty() && mods.top() == mod::negativeBlock) 
+				{
+					logger::low("state_machine", "pushing negative operator");
+					result.push_back("~");
+					mods.pop();
+				}
 				return;
 			}
 			if (std::find(operators.begin(), operators.end(), *it) == operators.end()) throw std::runtime_error(std::string("Expected operator. Got ") + std::to_string(*it));
@@ -204,8 +220,7 @@ namespace yesza
 			string_operator = *it;
 			if (*it == '-')
 			{
-				if (currentMod == mod::negative) currentMod = mod::empty;
-				else currentMod = mod::negative;
+				mods.push(mod::negative);
 				string_operator = "+";
 			}
 			operations.emplace_back(string_operator);
@@ -213,7 +228,7 @@ namespace yesza
 		
 		void process_oper(std::string::const_iterator& it)
 		{
-			logger::medium("state_machine", "operator branch", *it);
+			logger::medium("state_machine", "operator branch");
 			if (std::isdigit(static_cast<unsigned char>(*it)))
 			{
 				logger::low("state_machine", "it's a number");
@@ -222,11 +237,12 @@ namespace yesza
 				std::string string_number = getElement(it, handlingString.cend(), isNotNumber);
 				it += string_number.size() - 1;
 				logger::low("state_machine", "number is", string_number);
-				if (currentMod == mod::empty) result.push_back(string_number);
-				else 
+				result.push_back(string_number);
+				if (!mods.empty() && mods.top() == mod::negative)
 				{
-					result.push_back('-' + string_number);
-					currentMod = mod::empty;
+					logger::low("state_machine", "pushing negative operator");
+					result.push_back("~");
+					mods.pop();
 				}
 			}
 			else if (*it == '(')
@@ -234,13 +250,21 @@ namespace yesza
 				logger::low("state_machine", "it's open bracket");
 				currentState = state::oper;
 				operations.push_back("(");
+				if (!mods.empty())
+				{
+					if (mods.top() == mod::negative) mods.top() = mod::negativeBlock;
+					else mods.push(mod::negativeBlock);
+				}
 			}
 			else if (std::find(operators.begin(), operators.end(), *it) != operators.end())
 			{
 				if (*it == '*' || *it == '/') throw std::runtime_error(std::string("Bad operator in the begining. Got ") + *it);
 				currentState = state::oper;
 				logger::low("state_machine", "it's a operator");
-				if (*it == '-') currentMod = mod::negative;
+				if (*it == '-') 
+				{
+					mods.push(mod::negative);
+				}
 			}
 			else if (*it != ' ')
 			{
@@ -271,6 +295,11 @@ namespace yesza
 				logger::low("state_machine", "it's open bracket");
 				currentState = state::oper;
 				operations.push_back("(");
+				if (!mods.empty())
+				{
+					if (mods.top() == mod::negative) mods.top() = mod::negativeBlock;
+					else mods.push(mod::negativeBlock);
+				}
 			}
 			else throw std::runtime_error("Expected ( after function name");
 		}
@@ -287,9 +316,9 @@ namespace yesza
 			logger::medium("state_machine", "called state_machine::process");
 			for (auto it = handlingString.cbegin() ; it != handlingString.cend() ; it++)
 			{
-				logger::low("state_machine", "Got", *it);
 				if (*it == ' ') continue;
 				if (*it == '\0') break;
+				logger::low("state_machine", "Got", *it);
 				if (currentState == state::undefined)
 				{
 					process_undefined(it);
