@@ -1,6 +1,6 @@
 # Yesza library
 ## Description
-This library allows you to process function equation (not ready now:)) or solve problems in c++ standard strings by reversed polish notation
+This library allows you to process function equation or solve problems in c++ standard strings by reversed polish notation
 ## Install
 Copy header to your project
 ## Example
