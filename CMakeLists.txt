@@ -7,5 +7,5 @@ include_directories(${GTEST_INCLUDE_DIRS})
 
 set(CMAKE_BUILD_TYPE Debug)
 include_directories(include)
-add_executable(test source/test.cpp source/logger.cpp)
-target_link_libraries(test ${GTEST_LIBRARIES} gtest_main)
+add_executable(test source/test.cpp)
+target_link_libraries(test ${GTEST_LIBRARIES} gtest_main gtest pthread)
