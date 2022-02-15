@@ -31,6 +31,7 @@ TEST(expression, baseOperators)
 	EXPECT_DOUBLE_EQ(yesza::count("-10-20"), -30);
 	EXPECT_DOUBLE_EQ(yesza::count("5.5 - 1.4"), 4.1);
 	EXPECT_DOUBLE_EQ(yesza::count("2^10"), 1024);
+	EXPECT_DOUBLE_EQ(yesza::count("2^10"), 10);
 
 }
 TEST(equation, sum)
