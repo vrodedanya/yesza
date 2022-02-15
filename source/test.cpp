@@ -11,6 +11,7 @@ TEST(expression, baseOperators)
 	EXPECT_DOUBLE_EQ(yesza::count("5*10"), 50);
 	EXPECT_DOUBLE_EQ(yesza::count("5/10"), 0.5);
 	EXPECT_DOUBLE_EQ(yesza::count("2^5"), 32);
+	EXPECT_DOUBLE_EQ(yesza::count("2^10"), 1024);
 
 	EXPECT_THROW(yesza::count("5/0"), std::runtime_error);
 
@@ -39,6 +40,7 @@ TEST(equation, sum)
 	EXPECT_DOUBLE_EQ(eq(-10), 0);
 	EXPECT_DOUBLE_EQ(eq(5.5), 15.5);
 	EXPECT_DOUBLE_EQ(eq(-10.5), -0.5);
+	EXPECT_DOUBLE_EQ(eq(10), 20);
 	eq = yesza::make_equation("x*x");
 	EXPECT_DOUBLE_EQ(eq(0), 0);
 	EXPECT_DOUBLE_EQ(eq(5), 25);
